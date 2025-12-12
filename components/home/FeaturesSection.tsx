@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Playfair_Display, Lato } from "next/font/google";
+import { useRouter } from "next/navigation";
 
 const playfairDisplay = Playfair_Display({
   weight: ["400", "700"],
@@ -31,12 +32,14 @@ interface EnquiryFormData {
 
 const FeaturesSection: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const [enquiryForm, setEnquiryForm] = useState<EnquiryFormData>({
     fullName: "",
     phoneNumber: "",
     email: "",
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const features: Feature[] = [
@@ -80,19 +83,19 @@ const FeaturesSection: React.FC = () => {
       image: "/images/Layer_6.png",
       title: "Clubhouse with",
       subtitle: "Plush Amenities",
-      alt: "Clubhouse with Plush Amenities Icon",
+      alt: "Clubhouse Amenities Icon",
     },
   ];
 
-  // Duplicate features for seamless loop
   const duplicatedFeatures: Feature[] = [...features, ...features];
 
+  // Auto-scroll animation
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
 
     let scrollPosition = 0;
-    const scrollSpeed = 0.9; // Adjust speed (lower = slower)
+    const scrollSpeed = 0.9;
 
     const scroll = () => {
       scrollPosition += scrollSpeed;
@@ -108,11 +111,10 @@ const FeaturesSection: React.FC = () => {
     };
 
     const animationId = requestAnimationFrame(scroll);
-
     return () => cancelAnimationFrame(animationId);
   }, []);
 
-  // Enquiry form handlers
+  // Handle form input
   const handleEnquiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEnquiryForm((prev) => ({
@@ -121,78 +123,64 @@ const FeaturesSection: React.FC = () => {
     }));
   };
 
+  // Submit + redirect
   const handleEnquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Fire and forget – we don't care what comes back
       await fetch("/api/claim-plot", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(enquiryForm),
       });
+    } catch (error) {
+      console.error("Error submitting enquiry:", error);
+    } finally {
+      setIsSubmitting(false);
 
-      // Always treat as success for the user
-      alert("Thank you! We’ll get in touch soon.");
+      // Reset form
       setEnquiryForm({
         fullName: "",
         phoneNumber: "",
         email: "",
       });
-    } catch (error) {
-      console.error("Error submitting enquiry:", error);
-      // Still show success to the user, since you don't want error alerts
-      alert("Thank you! We’ll get in touch soon.");
-    } finally {
-      setIsSubmitting(false);
+
+      // Redirect to thank-you page
+      router.push("/thank-you");
     }
   };
 
   return (
     <section className="py-12 md:py-20 bg-white">
       <div className="container mx-auto px-6">
-        {/* 2-column layout: left content, right enquiry form */}
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-start">
-          {/* LEFT: Title, description, auto-scrolling features */}
+          {/* LEFT SECTION */}
           <div className="lg:w-2/3 w-full">
-            {/* Section Title */}
             <h2
               className={`${playfairDisplay.className} text-center lg:text-left text-3xl md:text-4xl lg:text-5xl italic mb-8 md:mb-10`}
-              style={{
-                fontWeight: 400,
-                color: "#A05035",
-              }}
+              style={{ fontWeight: 400, color: "#A05035" }}
             >
               An 86-acre Private Haven
             </h2>
 
-            {/* Description Text */}
             <p
               className={`${lato.className} text-center lg:text-left max-w-5xl mx-auto lg:mx-0 mb-10 md:mb-12 text-sm md:text-base lg:text-lg leading-relaxed`}
-              style={{
-                color: "#333333",
-              }}
+              style={{ color: "#333333" }}
             >
               Far from Pune&apos;s urban hustle yet effortlessly connected to
               its cosmopolitan sophistication lies a sprawling 86-acre estate of
               pristine greens, thriving flora and fauna and panoramic hill
-              views. Welcome to 86 Banyan Tree, an ultra-exclusive enclave of 72
-              masterfully designed bespoke villa plots crafted for those who
-              seek refined living, where tranquillity shapes everyday life and
-              each moment feels like a rare privilege.
+              views.
             </p>
 
-            {/* Auto-Scrolling Features Container */}
             <div className="relative overflow-hidden max-w-6xl mx-auto lg:mx-0">
               <div
                 ref={scrollRef}
                 className="flex gap-8 md:gap-12 overflow-x-hidden"
                 style={{ scrollBehavior: "auto" }}
               >
-                {duplicatedFeatures.map((feature: Feature, index: number) => (
+                {duplicatedFeatures.map((feature, index) => (
                   <div
                     key={`${feature.id}-${index}`}
                     className="flex-shrink-0 w-64 md:w-80 flex flex-col items-center text-center"
@@ -207,9 +195,7 @@ const FeaturesSection: React.FC = () => {
                     </div>
                     <h3
                       className={`${lato.className} text-lg md:text-xl`}
-                      style={{
-                        color: "#000000",
-                      }}
+                      style={{ color: "#000000" }}
                     >
                       {feature.title}
                       <br />
@@ -221,7 +207,7 @@ const FeaturesSection: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT: Enquiry form */}
+          {/* RIGHT FORM */}
           <div className="lg:w-1/3 w-full">
             <div className="bg-[#F7F2E8] border border-[#E0D5C3] rounded-2xl shadow-md p-6 md:p-8">
               <h3
@@ -243,7 +229,7 @@ const FeaturesSection: React.FC = () => {
                     value={enquiryForm.fullName}
                     onChange={handleEnquiryChange}
                     placeholder="Enter your full name"
-                    className="w-full px-4 py-2.5 bg-gray-100 border-0 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-700"
+                    className="w-full px-4 py-2.5 bg-gray-100 border-0 rounded-lg"
                     required
                   />
                 </div>
@@ -259,7 +245,7 @@ const FeaturesSection: React.FC = () => {
                     value={enquiryForm.phoneNumber}
                     onChange={handleEnquiryChange}
                     placeholder="Enter your phone number"
-                    className="w-full px-4 py-2.5 bg-gray-100 border-0 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-700"
+                    className="w-full px-4 py-2.5 bg-gray-100 border-0 rounded-lg"
                     required
                   />
                 </div>
@@ -275,7 +261,7 @@ const FeaturesSection: React.FC = () => {
                     value={enquiryForm.email}
                     onChange={handleEnquiryChange}
                     placeholder="Enter your email"
-                    className="w-full px-4 py-2.5 bg-gray-100 border-0 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-700"
+                    className="w-full px-4 py-2.5 bg-gray-100 border-0 rounded-lg"
                     required
                   />
                 </div>

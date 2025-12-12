@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Playfair_Display } from "next/font/google";
+import { useRouter } from "next/navigation";
 
 interface FormData {
   fullName: string;
@@ -16,6 +17,8 @@ const playfair = Playfair_Display({
 });
 
 const ClaimPlotForm: React.FC = () => {
+  const router = useRouter();
+
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
     phoneNumber: "",
@@ -48,13 +51,14 @@ const ClaimPlotForm: React.FC = () => {
       console.error("Error submitting form:", error);
     } finally {
       setIsSubmitting(false);
-      // Always show success to the user
-      alert("Thank you! We’ll get in touch soon.");
+      // Optional: reset form before redirect
       setFormData({
         fullName: "",
         phoneNumber: "",
         email: "",
       });
+      // Redirect to thank you page
+      router.push("/thank-you");
     }
   };
 
